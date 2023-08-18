@@ -8,6 +8,7 @@ class PhoneBookService:
     '''
 
     __header_table: list[str] = ["uuid","фамилия", "имя","отчество", "название_организации","телефон_рабочий", "телефон_личный_(сотовый)"] # названия столбцов таблицы
+    __file_not_found_error_text = "Телефонная книга еще не создана! Добавьте данные в книгу, она создастся автоматически."
 
     def __init__(self, phonebookDatabase: PhoneBookDatabase):
         self.database = phonebookDatabase
@@ -17,12 +18,13 @@ class PhoneBookService:
         '''
         Проверка валидности строки. Также можно сюда в дальнейшем добавить регулярку на поля.
         '''
-        print(record.split())
         data_record: list[str] = [x.strip() for x in record.split()]
         is_validated_record: bool = len(data_record) == 6 and all([len(x) != 0 for x in data_record]) # проверяем корректность ввода на кол-во записей и длину самих записей
         validated_record: str = ", ".join(data_record) # переводим в строку
-
-        is_validated_record = is_validated_record and not await self.database.is_added_record(validated_record) # проверяем наличие записи в бд
+        is_added: bool | None = await self.database.is_added_record(validated_record)
+        if is_added is None:
+            raise FileNotFoundError(self.__file_not_found_error_text)
+        is_validated_record = is_validated_record and not is_added # проверяем наличие записи в бд
         return validated_record, is_validated_record
 
 
@@ -34,6 +36,8 @@ class PhoneBookService:
         # print(data)
         if data != []:
             print(tabulate(data, headers=[x.replace("_", "\n") for x in self.__header_table])) # красиво выводим таблицу
+        elif data is None:
+            print(self.__file_not_found_error_text)
         else:
             print("Телефонная книга пуста! Добавьте данные!")
 
@@ -42,7 +46,12 @@ class PhoneBookService:
         '''Добавление новой записи в справочник
 
         '''
-        validated_record, is_valid_data = await self.__is_validated_record(record)
+        try:
+            validated_record, is_valid_data = await self.__is_validated_record(record)
+        except FileNotFoundError as e:
+            await self.database.create_phone_book()
+            validated_record, is_valid_data = await self.__is_validated_record(record)
+            # print(str(e))
 
         # Проверка валидности строки.
         if is_valid_data:
@@ -56,7 +65,12 @@ class PhoneBookService:
         '''Редактирование записи в справочнике
 
         '''
-        validated_record, is_valid_data = await self.__is_validated_record(edited_record)
+        try:
+            validated_record, is_valid_data = await self.__is_validated_record(edited_record)
+        except FileNotFoundError as e:
+            print(str(e))
+            return None
+
         if is_valid_data:
             result = await self.database.edit_record(record_uuid, validated_record + "\n")
             if result is not None:
@@ -70,6 +84,9 @@ class PhoneBookService:
 
         '''
         data: list[list[str]] | None = await self.database.get_all_records()
+        if data is None:
+            print(self.__file_not_found_error_text)
+            return None
         characteristics_items: list = list(characteristics.items())
         for key, value in characteristics_items:
             el_id = self.__header_table.index(key) # берем номер критерия поиска

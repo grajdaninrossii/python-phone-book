@@ -11,12 +11,14 @@ class PhoneBookDatabase:
         pass
 
 
-    async def get_all_records(self) -> list[str]:
+    async def get_all_records(self) -> list[str] | None:
         ''' Получение всех записей из файла
         '''
-
-        async with aiofiles.open("./phone_book.txt", "r") as fl:
-            records: list[str] = [line.rstrip().split(", ") for line in await fl.readlines()]
+        try:
+            async with aiofiles.open("./phone_book.txt", "r") as fl:
+                records: list[str] = [line.rstrip().split(", ") for line in await fl.readlines()]
+        except FileNotFoundError:
+            return None
         return records
 
 
@@ -28,18 +30,29 @@ class PhoneBookDatabase:
             await fl.write(f'{str(uuid.uuid4())}, {new_record}')
 
 
+    async def create_phone_book(self) -> None:
+        ''' Создание файла phone_book.txt
+
+        '''
+        async with aiofiles.open("./phone_book.txt", "a+") as fl:
+            await fl.write('')
+
+
     async def is_added_record(self, record: str) -> bool:
         ''' Проверка на существование исходной записи в базе данных(файле)
 
         '''
-        async with aiofiles.open("./phone_book.txt", "r") as fl:
-            line: str = await fl.readline() # читаем файл по-строчно
-            while line:
-                line = line.rstrip('\n')
-                line = ", ".join(line.split(", ")[1:])
-                if record == line:
-                    return True
-                line = await fl.readline()
+        try:
+            async with aiofiles.open("./phone_book.txt", "r") as fl:
+                line: str = await fl.readline() # читаем файл по-строчно
+                while line:
+                    line = line.rstrip('\n')
+                    line = ", ".join(line.split(", ")[1:])
+                    if record == line:
+                        return True
+                    line = await fl.readline()
+        except FileNotFoundError:
+            return None
         return False
 
 

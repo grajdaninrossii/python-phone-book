@@ -43,7 +43,10 @@ async def main():
                 await phone_book_service.edit_record(record_id, edited_record)
             case 4:
                 hint: str = "\nДля ввода характеристик из нескольких слов используйте _ (телефон_рабочий)\nВведите характеристики и значения фильтрации через запятую (имя:[имя] фамилия:[фамилия]): "
-                characteristics: dict[str, str] = dict([x.split(":") for x in input(hint).split()]) # парсим характиристики и значения, после сохраняем в словарь
+                try:
+                    characteristics: dict[str, str] = dict([x.split(":") for x in input(hint).split()]) # парсим характиристики и значения, после сохраняем в словарь
+                except ValueError:
+                    print("Вводите данные согласно образцу!! (имя:[имя] фамилия:[фамилия])")
                 await phone_book_service.print_found_records(characteristics)
 
 
