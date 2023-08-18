@@ -9,7 +9,7 @@ I used in project:
 3. aiofiles;
 4. tabulate;
 
-# Opportunities:
+# Opportunities
 * Page-by-page output of entries from the directory to the screen;
 * Adding a new entry to the directory;
 * Editing entries in the directory;
