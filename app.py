@@ -50,5 +50,6 @@ async def main():
                 await phone_book_service.print_found_records(characteristics)
 
 
+# Запуск приложения
 if __name__ == "__main__":
     asyncio.run(main())
