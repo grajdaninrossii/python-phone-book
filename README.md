@@ -1,6 +1,6 @@
 # python-phone-book
 The phone directory console application.
-Warining: file phone_book.txt will create with first add row in application!
+Warning: file phone_book.txt will create with first add row in application!
 
 # Technologies
 I used in project:
